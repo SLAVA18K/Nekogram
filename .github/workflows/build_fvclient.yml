@@ -21,28 +21,28 @@ jobs:
 
     - name: Modify Telegram and Nekogram Sources
       run: |
-        find . -name "build.gradle" -exec sed -i 's/org.nekogram.app/://fvclient.com' {} +
-        find . -name "build.gradle" -exec sed -i 's/###PACKAGENAME###/://fvclient.com' {} +
+        find . -name "build.gradle" -exec sed -i 's|org.nekogram.app|://fvclient.com|g' {} +
+        find . -name "build.gradle" -exec sed -i 's|###PACKAGENAME###|://fvclient.com|g' {} +
         
-        sed -i 's/public static int APP_ID = .*/public static int APP_ID = 30355297;/g' TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
-        sed -i 's/public static String APP_HASH = .*/public static String APP_HASH = "185d33731f4ac88b116e5b6c8f61b22c";/g' TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
+        sed -i 's|public static int APP_ID = .*|public static int APP_ID = 30355297;|g' TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
+        sed -i 's|public static String APP_HASH = .*|public static String APP_HASH = "185d33731f4ac88b116e5b6c8f61b22c";|g' TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
         
-        find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's/Telegram/FVClient/g' {} +
-        find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's/Nekogram/FVClient/g' {} +
-        find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's/AppName">.*</AppName">FVClient</g' {} +
+        find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's|Telegram|FVClient|g' {} +
+        find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's|Nekogram|FVClient|g' {} +
+        find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's|AppName">.*<|AppName">FVClient<|g' {} +
         
-        find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's/"Telegram"/"FVClient"/g' {} +
+        find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's|"Telegram"|"FVClient"|g' {} +
         
         find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's|t.me/nekofaq|t.me/Vyacheslav20K|g' {} +
         find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's|t.me/nekogramapp|t.me/Vyacheslav20K|g' {} +
 
-        find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's/#5085a5/#7B1FA2/g' {} +
-        find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's/#4a7197/#5E35B1/g' {} +
-        find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's/#2196F3/#8E24AA/g' {} +
+        find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's|#5085a5|#7B1FA2|g' {} +
+        find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's|#4a7197|#5E35B1|g' {} +
+        find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's|#2196F3|#8E24AA|g' {} +
 
-        sed -i 's/currentProxyAddress = .*/currentProxyAddress = "109.236.83.136";/g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
-        sed -i 's/currentProxyPort = .*/currentProxyPort = 1080;/g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
-        sed -i 's/currentProxyType = .*/currentProxyType = 1;/g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
+        sed -i 's|currentProxyAddress = .*|currentProxyAddress = "109.236.83.136";|g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
+        sed -i 's|currentProxyPort = .*|currentProxyPort = 1080;|g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
+        sed -i 's|currentProxyType = .*|currentProxyType = 1;|g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
 
     - name: Grant Execute Permission to Gradle
       run: chmod +x gradlew
