@@ -1,7 +1,7 @@
 name: Build FVClient APK
 
 on:
-  workflow_dispatch: # Позволяет запускать сборку вручную одной кнопкой
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,56 +21,34 @@ jobs:
 
     - name: Modify Telegram and Nekogram Sources
       run: |
-        echo "=== Настройка параметров FVClient ==="
+        find . -name "build.gradle" -exec sed -i 's/org.nekogram.app/://fvclient.com' {} +
+        find . -name "build.gradle" -exec sed -i 's/###PACKAGENAME###/://fvclient.com' {} +
         
-        # 1. Замена Application ID (имени пакета)
-        sed -i 's/applicationId "###PACKAGENAME###"/applicationId "org.fvclient.com"/g' TMessagesProj/build.gradle
-        sed -i 's/applicationId "org.nekogram.app"/applicationId "org.fvclient.com"/g' TMessagesProj/build.gradle
-        
-        # 2. Внедрение ваших API_ID и API_HASH
         sed -i 's/public static int APP_ID = .*/public static int APP_ID = 30355297;/g' TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
         sed -i 's/public static String APP_HASH = .*/public static String APP_HASH = "185d33731f4ac88b116e5b6c8f61b22c";/g' TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
         
-        # 3. Замена имени приложения во всех системных ресурсах (с Telegram/Nekogram на FVClient)
         find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's/Telegram/FVClient/g' {} +
         find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's/Nekogram/FVClient/g' {} +
         find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's/AppName">.*</AppName">FVClient</g' {} +
         
-        # 4. Принудительная замена системного имени "Telegram" в уведомлениях авторизации/регистрации
         find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's/"Telegram"/"FVClient"/g' {} +
         
-        # 5. Ссылка на ваш ТГК-канал (Вшиваем кнопку в боковое меню или стартовый экран)
-        # Подменяем стандартную ссылку на помощь/поддержку на вашу ссылку
         find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's|t.me/nekofaq|t.me/Vyacheslav20K|g' {} +
         find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's|t.me/nekogramapp|t.me/Vyacheslav20K|g' {} +
 
-        # 6. Изменение цветовой палитры по умолчанию на фиолетовую (Замена HEX-кодов темы)
-        # Меняем дефолтные лазурные цвета Telegram (#5085a5, #4a7197) на оттенки глубокого фиолетового
         find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's/#5085a5/#7B1FA2/g' {} +
         find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's/#4a7197/#5E35B1/g' {} +
         find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's/#2196F3/#8E24AA/g' {} +
 
-        # 7. Вшивание рабочего публичного MTProto/SOCKS5 прокси по умолчанию при первом запуске
-        # Настройка стабильного прокси-сервера в файле конфигурации инициализации соединений
-        PROXY_JAVA_FILE="TMessagesProj/src/main/java/org/telegram/messenger/MessagesController.java"
-        if [ -f "$PROXY_JAVA_FILE" ]; then
-          sed -i '/public void checkAppStartProxy/a \
-          SharedPreferences preferences = MessagesController.getGlobalMainSettings();\
-          SharedPreferences.Editor editor = preferences.edit();\
-          editor.putString("proxy_ip", "109.236.83.136");\
-          editor.putInt("proxy_port", 1080);\
-          editor.putString("proxy_user", "");\
-          editor.putString("proxy_pass", "");\
-          editor.putString("proxy_secret", "");\
-          editor.putBoolean("proxy_enabled", true);\
-          editor.apply();' $PROXY_JAVA_FILE
-        fi
+        sed -i 's/currentProxyAddress = .*/currentProxyAddress = "109.236.83.136";/g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
+        sed -i 's/currentProxyPort = .*/currentProxyPort = 1080;/g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
+        sed -i 's/currentProxyType = .*/currentProxyType = 1;/g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
 
     - name: Grant Execute Permission to Gradle
       run: chmod +x gradlew
 
     - name: Build Android APK
-      run: ./gradlew assembleNekoDebug --stacktrace
+      run: ./gradlew assembleNekoDebug --no-daemon --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
