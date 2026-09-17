@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code with Submodules
+    - name: Checkout Code
       uses: actions/checkout@v4
       with:
         fetch-depth: 1
@@ -20,36 +20,46 @@ jobs:
         distribution: 'zulu'
         java-version: '17'
 
-    - name: Modify Telegram and Nekogram Sources
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Modify Sources with Proxy and Features
       run: |
-        find . -name "build.gradle" -exec sed -i 's|org.nekogram.app|://fvclient.com|g' {} +
-        find . -name "build.gradle" -exec sed -i 's|###PACKAGENAME###|://fvclient.com|g' {} +
+        # 1. Настройка ваших API_ID и API_HASH
+        sed -i 's/public static int APP_ID = .*/public static int APP_ID = 30355297;/g' TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
+        sed -i 's/public static String APP_HASH = .*/public static String APP_HASH = "185d33731f4ac88b116e5b6c8f61b22c";/g' TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
         
-        sed -i 's|public static int APP_ID = .*|public static int APP_ID = 30355297;|g' TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
-        sed -i 's|public static String APP_HASH = .*|public static String APP_HASH = "185d33731f4ac88b116e5b6c8f61b22c";|g' TMessagesProj/src/main/java/org/telegram/messenger/BuildVars.java
-        
+        # 2. Замена имени приложения во всех строковых ресурсах
         find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's|Telegram|FVClient|g' {} +
         find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's|Nekogram|FVClient|g' {} +
         find TMessagesProj/src/main/res/ -name "strings.xml" -exec sed -i 's|AppName">.*<|AppName">FVClient<|g' {} +
         
-        find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's|"Telegram"|"FVClient"|g' {} +
+        # 3. Подмена системного имени "Telegram" в коде экранов авторизации и регистрации
+        find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's/"Telegram"/"FVClient"/g' {} +
         
+        # 4. Ссылка на ваш ТГК-канал t.me/Vyacheslav20K
         find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's|t.me/nekofaq|t.me/Vyacheslav20K|g' {} +
         find TMessagesProj/src/main/java/ -name "*.java" -exec sed -i 's|t.me/nekogramapp|t.me/Vyacheslav20K|g' {} +
 
+        # 5. Изменение цветовой палитры интерфейса по умолчанию на фиолетовую
         find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's|#5085a5|#7B1FA2|g' {} +
         find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's|#4a7197|#5E35B1|g' {} +
         find TMessagesProj/src/main/res/values/ -name "*.xml" -exec sed -i 's|#2196F3|#8E24AA|g' {} +
 
-        sed -i 's|currentProxyAddress = .*|currentProxyAddress = "109.236.83.136";|g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
-        sed -i 's|currentProxyPort = .*|currentProxyPort = 1080;|g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
-        sed -i 's|currentProxyType = .*|currentProxyType = 1;|g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
+        # 6. Безопасное вшивание рабочего SOCKS5 прокси на уровне нативного сетевого менеджера
+        sed -i 's/currentProxyAddress = .*/currentProxyAddress = "109.236.83.136";/g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
+        sed -i 's/currentProxyPort = .*/currentProxyPort = 1080;/g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
+        sed -i 's/currentProxyType = .*/currentProxyType = 1;/g' TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java
 
-    - name: Grant Execute Permission to Gradle
+    - name: Grant Execute Permission
       run: chmod +x gradlew
 
     - name: Build Android APK
-      run: ./gradlew assembleNekoDebug --no-daemon --stacktrace
+      run: |
+        ./gradlew assembleNekoDebug \
+          -PapplicationId=://fvclient.com \
+          --no-daemon \
+          --stacktrace
 
     - name: Upload Finished APK
       uses: actions/upload-artifact@v4
